@@ -77,7 +77,7 @@ void convert_md_to_xhtml(const char *md_file, const char *xhtml_file) {
 
     while (fgets(line, sizeof(line), md)) {
         escape_ampersand(line);
-        line[strcspn(line, "\n")] = 0;
+        line[strcspn(line, "\n")] = '\0';
 
         if (strlen(line) == 0) {
             if (in_paragraph) {
@@ -108,10 +108,8 @@ void convert_md_to_xhtml(const char *md_file, const char *xhtml_file) {
             } else {
                 if (in_paragraph) {
                     strcat(paragraph, line);
-                    strcat(paragraph, " ");
                 } else {
                     strcpy(paragraph, line);
-                    strcat(paragraph, " ");
                     in_paragraph = 1;
                 }
             }

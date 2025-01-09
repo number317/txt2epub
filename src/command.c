@@ -85,9 +85,14 @@ int split_txt_to_md(char *txt_file, book_config *config) {
     config->first_chapter = current_chapter;
 
     while (fgets(line, sizeof(line), txt)) {
-        line_count++;
+        bool entire_line = line[strlen(line) - 1] == '\n';
+        if (entire_line) {
+            line_count++;
+        }
+        // dos2unix
+        line[strcspn(line, "\r")] = '\0';
         line[strcspn(line, "\n")] = '\0';
-        if (filter_check(line, config)) {
+        if (line[0] == '\0' || filter_check(line, config)) {
             continue;
         }
         if (regexec(config->preface_reg->reg, line, 0, NULL, 0) == 0) {
@@ -199,7 +204,11 @@ int split_txt_to_md(char *txt_file, book_config *config) {
             fprintf(temp_file, "%s\n\n", line);
             continue;
         } else {
-            fprintf(temp_file, "%s\n\n", line);
+            if (entire_line) {
+                fprintf(temp_file, "%s\n\n", line);
+            } else {
+                fprintf(temp_file, "%s", line);
+            }
             continue;
         }
     }
