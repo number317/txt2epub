@@ -39,12 +39,24 @@ int create_epub_structure(char *book_dir) {
     return 0;
 }
 
-void escape_ampersand(char *str) {
+void escape_special_chars(char *str) {
     char *pos = str;
-    while ((pos = strchr(pos, '&')) != NULL) {
-        memmove(pos + 5, pos + 1, strlen(pos));
-        memcpy(pos, "&amp;", 5);
-        pos += 5;
+    while (*pos) {
+        if (*pos == '&') {
+            memmove(pos + 5, pos + 1, strlen(pos));
+            memcpy(pos, "&amp;", 5);
+            pos += 5;
+        } else if (*pos == '<') {
+            memmove(pos + 4, pos + 1, strlen(pos));
+            memcpy(pos, "&lt;", 4);
+            pos += 4;
+        } else if (*pos == '>') {
+            memmove(pos + 4, pos + 1, strlen(pos));
+            memcpy(pos, "&gt;", 4);
+            pos += 4;
+        } else {
+            pos++;
+        }
     }
 }
 
@@ -76,7 +88,7 @@ void convert_md_to_xhtml(const char *md_file, const char *xhtml_file) {
     memset(paragraph, 0, sizeof(paragraph));
 
     while (fgets(line, sizeof(line), md)) {
-        escape_ampersand(line);
+        escape_special_chars(line);
         line[strcspn(line, "\n")] = '\0';
 
         if (strlen(line) == 0) {
