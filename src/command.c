@@ -159,13 +159,14 @@ int split_txt_to_md(char *txt_file, book_config *config) {
                 sprintf(current_chapter->md_path, "%s/chapter-%d.%d.md", OUT_PATH, index_level1, index_level2);
                 sprintf(current_chapter->epub_name, "chapter-%d.%d.xhtml", index_level1, index_level2);
                 sprintf(current_chapter->epub_path, "%s/OEBPS/chapter-%d.%d.xhtml", EPUB_PATH, index_level1, index_level2);
+                fprintf(toc, "    - [%s](%s)\n", line, current_chapter->md_name);
             } else {
                 sprintf(current_chapter->md_name, "chapter-%d.md", index_level2);
                 sprintf(current_chapter->md_path, "%s/chapter-%d.md", OUT_PATH, index_level2);
                 sprintf(current_chapter->epub_name, "chapter-%d.xhtml", index_level2);
                 sprintf(current_chapter->epub_path, "%s/OEBPS/chapter-%d.xhtml", EPUB_PATH, index_level2);
+                fprintf(toc, "- [%s](%s)\n", line, current_chapter->md_name);
             }
-            fprintf(toc, "    - [%s](%s)\n", line, current_chapter->md_name);
             temp_file = fopen(current_chapter->md_path, "w");
             fprintf(temp_file, "## %s\n\n", line);
             continue;
@@ -199,7 +200,7 @@ int split_txt_to_md(char *txt_file, book_config *config) {
             sprintf(current_chapter->md_path, "./out/summary.md");
             sprintf(current_chapter->epub_name, "summary.xhtml");
             sprintf(current_chapter->epub_path, "%s/OEBPS/summary.xhtml", EPUB_PATH);
-            fprintf(toc, "[%s](%s)\n", line, current_chapter->md_name);
+            fprintf(toc, "[%s](%s)\n", current_chapter->title, current_chapter->md_name);
             temp_file = fopen(current_chapter->md_path, "w");
             fprintf(temp_file, "%s\n\n", line);
             continue;
