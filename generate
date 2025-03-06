@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -euo pipefail
+
+main(){
+    bookname=$1
+    if [[ ! -d epub ]]; then mkdir epub; fi
+    if [[ ! -d mobi ]]; then mkdir mobi; fi
+    pushd $bookname
+    txt2epub generate $1.txt
+    # detect return value split success
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+    convert -resize 600x800! cover.jpg cover_new.jpg
+    mv cover_new.jpg cover.jpg
+    kindlegen book/$bookname.epub -c1 -locale zh -dont_append_source
+    mv book/*.epub ../epub/
+    mv book/*.mobi ../mobi/
+    popd
+}
+
+[[ "$0" == "$BASH_SOURCE" ]] && main "$@" || true
+

@@ -20,6 +20,12 @@ cp /path/sample.txt ./ # copy the txt file
 txt2epub generate sample.txt # epub will be generated in `book/sample.epub`
 ```
 
+After these steps, you will get an EPUB file.
+However, if you want to get a suitable cover, you need to resize the cover manually. And if you want to get a mobi file, you need `kindlegen` to convert EPUB to MOBI.
+
+So I recommend you use `generate` to simplify the process. It will resize the cover and generate a EPUB file and a MOBI file automatically after you config the novel directory.
+
+
 <details>
 <summary>Usage</summary>
 
