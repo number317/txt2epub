@@ -37,11 +37,20 @@ int create_config(char *dir) {
 
 chapter *init_chapter() {
     chapter *chapter = malloc(sizeof(struct chapter));
-    chapter->title = malloc(sizeof(char) * MAX_PATH_LENGTH);
+    if (!chapter) {
+        fprintf(stderr, "Memory allocation failed for chapter\n");
+        exit(EXIT_FAILURE);
+    }
+    chapter->title = malloc(sizeof(char) * MAX_LINE_LENGTH);
     chapter->md_name = malloc(sizeof(char) * MAX_PATH_LENGTH);
     chapter->md_path = malloc(sizeof(char) * MAX_PATH_LENGTH);
     chapter->epub_name = malloc(sizeof(char) * MAX_PATH_LENGTH);
     chapter->epub_path = malloc(sizeof(char) * MAX_PATH_LENGTH);
+    if (!chapter->title || !chapter->md_name || !chapter->md_path ||
+        !chapter->epub_name || !chapter->epub_path) {
+        fprintf(stderr, "Memory allocation failed for chapter fields\n");
+        exit(EXIT_FAILURE);
+    }
     chapter->next = NULL;
     return chapter;
 };
@@ -100,18 +109,18 @@ int split_txt_to_md(char *txt_file, book_config *config) {
                 fprintf(stderr, "preface chapter title is too long: %d %s\n", line_count, line);
                 exit(EXIT_FAILURE);
             }
-            fclose(temp_file);
+            if (temp_file) fclose(temp_file);
             chapter_index++;
             chapter *new_chapter = init_chapter();
             current_chapter->next = new_chapter;
             current_chapter = new_chapter;
             current_chapter->level = 1;
             current_chapter->index = chapter_index;
-            sprintf(current_chapter->title, "%s", line);
-            sprintf(current_chapter->md_name, "preface.md");
-            sprintf(current_chapter->md_path, "%s/preface.md", OUT_PATH);
-            sprintf(current_chapter->epub_name, "preface.xhtml");
-            sprintf(current_chapter->epub_path, "%s/OEBPS/preface.xhtml", EPUB_PATH);
+            snprintf(current_chapter->title, MAX_LINE_LENGTH, "%s", line);
+            snprintf(current_chapter->md_name, MAX_PATH_LENGTH, "preface.md");
+            snprintf(current_chapter->md_path, MAX_PATH_LENGTH, "%s/preface.md", OUT_PATH);
+            snprintf(current_chapter->epub_name, MAX_PATH_LENGTH, "preface.xhtml");
+            snprintf(current_chapter->epub_path, MAX_PATH_LENGTH, "%s/OEBPS/preface.xhtml", EPUB_PATH);
             fprintf(toc, "[%s](%s)\n", current_chapter->title, current_chapter->md_name);
             temp_file = fopen(current_chapter->md_path, "w");
             fprintf(temp_file, "# %s\n\n", line);
@@ -122,7 +131,7 @@ int split_txt_to_md(char *txt_file, book_config *config) {
                 fprintf(stderr, "level1 chapter title is too long: %d %s\n", line_count, line);
                 exit(EXIT_FAILURE);
             }
-            fclose(temp_file);
+            if (temp_file) fclose(temp_file);
             chapter_index++;
             index_level1++;
             chapter *new_chapter = init_chapter();
@@ -130,11 +139,11 @@ int split_txt_to_md(char *txt_file, book_config *config) {
             current_chapter = new_chapter;
             current_chapter->level = 1;
             current_chapter->index = chapter_index;
-            sprintf(current_chapter->title, "%s", line);
-            sprintf(current_chapter->md_name, "chapter-%d.md", index_level1);
-            sprintf(current_chapter->md_path, "%s/chapter-%d.md", OUT_PATH, index_level1);
-            sprintf(current_chapter->epub_name, "chapter-%d.xhtml", index_level1);
-            sprintf(current_chapter->epub_path, "%s/OEBPS/chapter-%d.xhtml", EPUB_PATH, index_level1);
+            snprintf(current_chapter->title, MAX_LINE_LENGTH, "%s", line);
+            snprintf(current_chapter->md_name, MAX_PATH_LENGTH, "chapter-%d.md", index_level1);
+            snprintf(current_chapter->md_path, MAX_PATH_LENGTH, "%s/chapter-%d.md", OUT_PATH, index_level1);
+            snprintf(current_chapter->epub_name, MAX_PATH_LENGTH, "chapter-%d.xhtml", index_level1);
+            snprintf(current_chapter->epub_path, MAX_PATH_LENGTH, "%s/OEBPS/chapter-%d.xhtml", EPUB_PATH, index_level1);
             fprintf(toc, "- [%s](%s)\n", current_chapter->title, current_chapter->md_name);
             temp_file = fopen(current_chapter->md_path, "w");
             fprintf(temp_file, "# %s\n\n", line);
@@ -145,7 +154,7 @@ int split_txt_to_md(char *txt_file, book_config *config) {
                 fprintf(stderr, "level2 chapter title is too long: %d %s\n", line_count, line);
                 exit(EXIT_FAILURE);
             }
-            fclose(temp_file);
+            if (temp_file) fclose(temp_file);
             chapter_index++;
             index_level2++;
             chapter *new_chapter = init_chapter();
@@ -153,18 +162,18 @@ int split_txt_to_md(char *txt_file, book_config *config) {
             current_chapter = new_chapter;
             current_chapter->level = index_level1 > 0 ? 2 : 1;
             current_chapter->index = chapter_index;
-            sprintf(current_chapter->title, "%s", line);
+            snprintf(current_chapter->title, MAX_LINE_LENGTH, "%s", line);
             if (index_level1 > 0) {
-                sprintf(current_chapter->md_name, "chapter-%d.%d.md", index_level1, index_level2);
-                sprintf(current_chapter->md_path, "%s/chapter-%d.%d.md", OUT_PATH, index_level1, index_level2);
-                sprintf(current_chapter->epub_name, "chapter-%d.%d.xhtml", index_level1, index_level2);
-                sprintf(current_chapter->epub_path, "%s/OEBPS/chapter-%d.%d.xhtml", EPUB_PATH, index_level1, index_level2);
+                snprintf(current_chapter->md_name, MAX_PATH_LENGTH, "chapter-%d.%d.md", index_level1, index_level2);
+                snprintf(current_chapter->md_path, MAX_PATH_LENGTH, "%s/chapter-%d.%d.md", OUT_PATH, index_level1, index_level2);
+                snprintf(current_chapter->epub_name, MAX_PATH_LENGTH, "chapter-%d.%d.xhtml", index_level1, index_level2);
+                snprintf(current_chapter->epub_path, MAX_PATH_LENGTH, "%s/OEBPS/chapter-%d.%d.xhtml", EPUB_PATH, index_level1, index_level2);
                 fprintf(toc, "    - [%s](%s)\n", line, current_chapter->md_name);
             } else {
-                sprintf(current_chapter->md_name, "chapter-%d.md", index_level2);
-                sprintf(current_chapter->md_path, "%s/chapter-%d.md", OUT_PATH, index_level2);
-                sprintf(current_chapter->epub_name, "chapter-%d.xhtml", index_level2);
-                sprintf(current_chapter->epub_path, "%s/OEBPS/chapter-%d.xhtml", EPUB_PATH, index_level2);
+                snprintf(current_chapter->md_name, MAX_PATH_LENGTH, "chapter-%d.md", index_level2);
+                snprintf(current_chapter->md_path, MAX_PATH_LENGTH, "%s/chapter-%d.md", OUT_PATH, index_level2);
+                snprintf(current_chapter->epub_name, MAX_PATH_LENGTH, "chapter-%d.xhtml", index_level2);
+                snprintf(current_chapter->epub_path, MAX_PATH_LENGTH, "%s/OEBPS/chapter-%d.xhtml", EPUB_PATH, index_level2);
                 fprintf(toc, "- [%s](%s)\n", line, current_chapter->md_name);
             }
             temp_file = fopen(current_chapter->md_path, "w");
@@ -176,18 +185,18 @@ int split_txt_to_md(char *txt_file, book_config *config) {
                 fprintf(stderr, "epilogue chapter title is too long: %d %s\n", line_count, line);
                 exit(EXIT_FAILURE);
             }
-            fclose(temp_file);
+            if (temp_file) fclose(temp_file);
             chapter_index++;
             chapter *new_chapter = init_chapter();
             current_chapter->next = new_chapter;
             current_chapter = new_chapter;
             current_chapter->level = 1;
             current_chapter->index = chapter_index;
-            sprintf(current_chapter->title, "%s", line);
-            sprintf(current_chapter->md_name, "epilogue.md");
-            sprintf(current_chapter->md_path, "./out/epilogue.md");
-            sprintf(current_chapter->epub_name, "epilogue.xhtml");
-            sprintf(current_chapter->epub_path, "%s/OEBPS/epilogue.xhtml", EPUB_PATH);
+            snprintf(current_chapter->title, MAX_LINE_LENGTH, "%s", line);
+            snprintf(current_chapter->md_name, MAX_PATH_LENGTH, "epilogue.md");
+            snprintf(current_chapter->md_path, MAX_PATH_LENGTH, "./out/epilogue.md");
+            snprintf(current_chapter->epub_name, MAX_PATH_LENGTH, "epilogue.xhtml");
+            snprintf(current_chapter->epub_path, MAX_PATH_LENGTH, "%s/OEBPS/epilogue.xhtml", EPUB_PATH);
             fprintf(toc, "[%s](epilogue.md)\n", line);
             temp_file = fopen(current_chapter->md_path, "w");
             fprintf(temp_file, "# %s\n\n", line);
@@ -195,11 +204,11 @@ int split_txt_to_md(char *txt_file, book_config *config) {
         }
 
         if (temp_file == NULL) {
-            sprintf(current_chapter->title, "简介");
-            sprintf(current_chapter->md_name, "summary.md");
-            sprintf(current_chapter->md_path, "./out/summary.md");
-            sprintf(current_chapter->epub_name, "summary.xhtml");
-            sprintf(current_chapter->epub_path, "%s/OEBPS/summary.xhtml", EPUB_PATH);
+            snprintf(current_chapter->title, MAX_LINE_LENGTH, "简介");
+            snprintf(current_chapter->md_name, MAX_PATH_LENGTH, "summary.md");
+            snprintf(current_chapter->md_path, MAX_PATH_LENGTH, "./out/summary.md");
+            snprintf(current_chapter->epub_name, MAX_PATH_LENGTH, "summary.xhtml");
+            snprintf(current_chapter->epub_path, MAX_PATH_LENGTH, "%s/OEBPS/summary.xhtml", EPUB_PATH);
             fprintf(toc, "[%s](%s)\n", current_chapter->title, current_chapter->md_name);
             temp_file = fopen(current_chapter->md_path, "w");
             fprintf(temp_file, "%s\n\n", line);

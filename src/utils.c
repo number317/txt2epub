@@ -29,8 +29,16 @@ int write_file_once(char *filename, char *buf) {
 
 char *get_current_time() {
     time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
+    struct tm *tm = gmtime(&t);
+    if (!tm) {
+        fprintf(stderr, "Failed to get current time\n");
+        exit(EXIT_FAILURE);
+    }
     char *time_str = malloc(sizeof(char) * 21);
+    if (!time_str) {
+        fprintf(stderr, "Memory allocation failed for time string\n");
+        exit(EXIT_FAILURE);
+    }
     strftime(time_str, 21, "%Y-%m-%dT%H:%M:%SZ", tm);
     return time_str;
 }

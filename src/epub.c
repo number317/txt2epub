@@ -39,18 +39,22 @@ int create_epub_structure(char *book_dir) {
     return 0;
 }
 
-void escape_special_chars(char *str) {
+void escape_special_chars(char *str, size_t buf_size) {
     char *pos = str;
     while (*pos) {
+        size_t total_len = (pos - str) + strlen(pos);
         if (*pos == '&') {
+            if (total_len + 4 >= buf_size) break;
             memmove(pos + 5, pos + 1, strlen(pos));
             memcpy(pos, "&amp;", 5);
             pos += 5;
         } else if (*pos == '<') {
+            if (total_len + 3 >= buf_size) break;
             memmove(pos + 4, pos + 1, strlen(pos));
             memcpy(pos, "&lt;", 4);
             pos += 4;
         } else if (*pos == '>') {
+            if (total_len + 3 >= buf_size) break;
             memmove(pos + 4, pos + 1, strlen(pos));
             memcpy(pos, "&gt;", 4);
             pos += 4;
@@ -70,6 +74,7 @@ void convert_md_to_xhtml(const char *md_file, const char *xhtml_file) {
     FILE *xhtml = fopen(xhtml_file, "w");
     if (!xhtml) {
         fprintf(stderr, "Failed to open .xhtml file: %s\n", xhtml_file);
+        fclose(md);
         exit(EXIT_FAILURE);
     }
 
@@ -82,13 +87,13 @@ void convert_md_to_xhtml(const char *md_file, const char *xhtml_file) {
     fprintf(xhtml, "  </head>\n");
     fprintf(xhtml, "  <body>\n");
 
-    char line[MAX_LINE_LENGTH];
+    char line[MAX_LINE_LENGTH * 5];
     int in_paragraph = 0;
     char paragraph[MAX_LINE_LENGTH * 10];
     memset(paragraph, 0, sizeof(paragraph));
 
-    while (fgets(line, sizeof(line), md)) {
-        escape_special_chars(line);
+    while (fgets(line, MAX_LINE_LENGTH, md)) {
+        escape_special_chars(line, sizeof(line));
         line[strcspn(line, "\n")] = '\0';
 
         if (strlen(line) == 0) {
@@ -119,9 +124,14 @@ void convert_md_to_xhtml(const char *md_file, const char *xhtml_file) {
                 in_paragraph = 0;
             } else {
                 if (in_paragraph) {
-                    strcat(paragraph, line);
+                    size_t plen = strlen(paragraph);
+                    size_t llen = strlen(line);
+                    if (plen + llen < sizeof(paragraph) - 1) {
+                        strcat(paragraph, line);
+                    }
                 } else {
-                    strcpy(paragraph, line);
+                    strncpy(paragraph, line, sizeof(paragraph) - 1);
+                    paragraph[sizeof(paragraph) - 1] = '\0';
                     in_paragraph = 1;
                 }
             }
@@ -197,11 +207,6 @@ void generate_toc_ncx(book_config *config, char *epub_dir) {
 }
 
 void generate_opf(book_config *config) {
-    FILE *toc_file = fopen(TOC_MD_PATH, "r");
-    if (!toc_file) {
-        perror("Failed to open TOC.md file");
-        return;
-    }
     FILE *opf_file = fopen("./book/epub/OEBPS/content.opf", "w");
     if (!opf_file) {
         perror("Failed to open content.opf for writing");
@@ -244,7 +249,6 @@ void generate_opf(book_config *config) {
     fprintf(opf_file, "  </spine>\n");
     fprintf(opf_file, "</package>\n");
     free(current_time);
-    fclose(toc_file);
     fclose(opf_file);
 };
 
@@ -259,7 +263,7 @@ void copy_cover(book_config *config) {
     }
 
     char cover_path[MAX_PATH_LENGTH];
-    sprintf(cover_path, "%s/OEBPS/cover.jpg", EPUB_PATH);
+    snprintf(cover_path, sizeof(cover_path), "%s/OEBPS/cover.jpg", EPUB_PATH);
     FILE *destination = fopen(cover_path, "wb");
     if (destination == NULL) {
         fclose(source);
@@ -299,12 +303,22 @@ void create_zip(book_config *config) {
     char *cmd;
     int result;
     if (strcmp(config->compress, "zip") == 0) {
-        cmd = malloc(sizeof(char) * (strlen(cmd_zip) + strlen(config->title) + 1));
-        snprintf(cmd, strlen(cmd_zip) + strlen(config->title) + 1, cmd_zip, config->title);
+        size_t cmd_len = strlen(cmd_zip) + strlen(config->title) + 1;
+        cmd = malloc(cmd_len);
+        if (!cmd) {
+            fprintf(stderr, "Memory allocation failed for zip command\n");
+            exit(EXIT_FAILURE);
+        }
+        snprintf(cmd, cmd_len, cmd_zip, config->title);
         result = system(cmd);
     } else {
-        cmd = malloc(sizeof(char) * (strlen(cmd_7z) + strlen(config->title) + 1));
-        snprintf(cmd, strlen(cmd_7z) + strlen(config->title) + 1, cmd_7z, config->title);
+        size_t cmd_len = strlen(cmd_7z) + strlen(config->title) + 1;
+        cmd = malloc(cmd_len);
+        if (!cmd) {
+            fprintf(stderr, "Memory allocation failed for zip command\n");
+            exit(EXIT_FAILURE);
+        }
+        snprintf(cmd, cmd_len, cmd_7z, config->title);
         result = system(cmd);
     }
 
