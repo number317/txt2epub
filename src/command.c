@@ -8,6 +8,8 @@
 #include "utils.h"
 #include "epub.h"
 
+#define AUTO_DESC_MAX 500
+
 int init_project(char *dir) {
     if (create_dir(dir)) {
         exit(EXIT_FAILURE);
@@ -237,8 +239,69 @@ int filter_check(char *str, book_config *config) {
     return 0;
 }
 
+static int is_meta_line(const char *line) {
+    static const char *prefixes[] = {
+        "书名", "作品名称", "小说名称",
+        "作者",
+        "内容简介", "作品简介", "小说简介", "简介",
+        "标签", "类别", "状态", "字数", "点击",
+    };
+    while (*line == ' ' || *line == '\t') line++;
+    for (size_t i = 0; i < sizeof(prefixes)/sizeof(prefixes[0]); i++) {
+        size_t plen = strlen(prefixes[i]);
+        if (strncmp(line, prefixes[i], plen) != 0) continue;
+        if (line[plen] == ':') return 1;
+        if ((unsigned char)line[plen]     == 0xEF &&
+            (unsigned char)line[plen + 1] == 0xBC &&
+            (unsigned char)line[plen + 2] == 0x9A) return 1;
+    }
+    return 0;
+}
+
+static void set_description(book_config *config) {
+    if (config->description && config->description[0]) return;
+
+    if (config->description_file && config->description_file[0]) {
+        config->description = read_file_alloc(config->description_file);
+        if (config->description) return;
+        fprintf(stderr, "Warning: descriptionFile '%s' not found, falling back to auto-extract\n",
+                config->description_file);
+    }
+
+    char summary_path[MAX_PATH_LENGTH];
+    snprintf(summary_path, sizeof(summary_path), "%s/summary.md", OUT_PATH);
+    FILE *f = fopen(summary_path, "r");
+    if (!f) { config->description = NULL; return; }
+
+    char *buf = malloc(AUTO_DESC_MAX + 1);
+    if (!buf) { fclose(f); config->description = NULL; return; }
+    size_t pos = 0;
+    char line[AUTO_DESC_MAX];
+
+    while (pos < AUTO_DESC_MAX && fgets(line, sizeof(line), f)) {
+        line[strcspn(line, "\r\n")] = '\0';
+        if (line[0] == '\0' || is_meta_line(line)) continue;
+        size_t llen = strlen(line);
+        size_t remain = AUTO_DESC_MAX - pos;
+        if (llen > remain) llen = remain;
+        if (pos > 0) buf[pos++] = '\n';
+        memcpy(buf + pos, line, llen);
+        pos += llen;
+    }
+    fclose(f);
+    buf[pos] = '\0';
+
+    if (pos > 0) {
+        config->description = buf;
+    } else {
+        free(buf);
+        config->description = NULL;
+    }
+}
+
 void generate_epub(book_config *config, char *txt_path) {
     split_txt_to_md(txt_path, config);
+    set_description(config);
     create_epub_structure("./book");
     generate_toc_ncx(config, "book/epub");
     generate_opf(config);

@@ -8,6 +8,8 @@
 #define DEFAULT_CONFIG \
     "title = \"%s\"\n" \
     "author = \"Noname\"\n" \
+    "description = \"\"\n" \
+    "descriptionFile = \"\"\n" \
     "cover = \"./cover.jpg\"\n" \
     "prefaceReg = \"^ *(序|序章|楔子|前奏|前言|作品相关)( .*)?$\"\n" \
     "level1Reg = \"^ *(第[零一二三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾1234567890]*(卷|部|集)|序卷)( .*)?$\"\n" \
@@ -23,6 +25,7 @@
 
 #define MAX_LINE_LENGTH 1024
 #define MAX_PATH_LENGTH 256
+#define MAX_DESC_LENGTH 2000
 
 #define OUT_PATH "./out"
 #define BOOK_PATH "./book"
@@ -56,6 +59,8 @@ typedef struct {
     char *title;
     char *author;
     char *cover;
+    char *description_file;
+    char *description;
     regex *preface_reg;
     regex *level1_reg;
     regex *level2_reg;

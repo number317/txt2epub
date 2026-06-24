@@ -224,7 +224,8 @@ void generate_opf(book_config *config) {
     fprintf(opf_file, "    <dc:identifier id=\"txt2epub\">urn:isbn:txt2epub</dc:identifier>\n");
     fprintf(opf_file, "    <dc:language>zh</dc:language>\n");
     fprintf(opf_file, "    <dc:publisher>txt2epub</dc:publisher>\n");
-    fprintf(opf_file, "    <dc:description>txt2epub by cheon</dc:description>\n");
+    fprintf(opf_file, "    <dc:description>%s</dc:description>\n",
+            config->description ? config->description : "txt2epub by cheon");
     fprintf(opf_file, "    <meta name=\"cover\" content=\"cover-image\"/>\n");
     fprintf(opf_file, "  </metadata>\n");
 

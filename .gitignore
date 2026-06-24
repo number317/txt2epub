@@ -1,2 +1,5 @@
 build/
 txt2epub
+epub
+mobi
+[^\x00-\x80]*/**

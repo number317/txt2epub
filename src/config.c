@@ -133,6 +133,8 @@ void config_load(const char *filepath, book_config *config) {
     config->title = load_string_setting(&cfg, "title");
     config->author = load_string_setting(&cfg, "author");
     config->cover = load_string_setting(&cfg, "cover");
+    config->description = load_string_setting(&cfg, "description");
+    config->description_file = load_string_setting(&cfg, "descriptionFile");
     config->preface_reg = load_regex_setting(&cfg, "prefaceReg");
     config->level1_reg = load_regex_setting(&cfg, "level1Reg");
     config->level2_reg = load_regex_setting(&cfg, "level2Reg");
@@ -162,6 +164,8 @@ void config_free(book_config *config) {
     free(config->title);
     free(config->author);
     free(config->cover);
+    free(config->description_file);
+    free(config->description);
     free(config->compress);
 
     free_regex(config->preface_reg);
@@ -194,6 +198,9 @@ void config_print(book_config *config) {
     printf("title: %s\n", config->title);
     printf("author: %s\n", config->author);
     printf("cover: %s\n", config->cover);
+    if (config->description)
+        printf("description: %s\n", config->description);
+    printf("descriptionFile: %s\n", config->description_file ? config->description_file : "(not set)");
     printf("prefaceReg: %s\n", config->preface_reg->reg_pattern);
     printf("level1Reg: %s\n", config->level1_reg->reg_pattern);
     printf("level2Reg: %s\n", config->level2_reg->reg_pattern);

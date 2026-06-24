@@ -4,4 +4,5 @@
 int create_dir(char *dir);
 int write_file_once(char *filename, char *buf);
 char *get_current_time();
+char *read_file_alloc(const char *path);
 #endif
